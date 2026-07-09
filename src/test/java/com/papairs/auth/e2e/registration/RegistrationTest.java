@@ -25,11 +25,10 @@ public class RegistrationTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("User registered successfully"))
-                .andExpect(jsonPath("$.user.id").exists())
-                .andExpect(jsonPath("$.user.email").value("newuser@example.com"))
-                .andExpect(jsonPath("$.user.emailVerified").value(false))
-                .andExpect(jsonPath("$.user.active").value(true));
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.email").value("newuser@example.com"))
+                .andExpect(jsonPath("$.emailVerified").value(false))
+                .andExpect(jsonPath("$.active").value(true));
 
         fixtures.verifyUserExists("newuser@example.com");
     }

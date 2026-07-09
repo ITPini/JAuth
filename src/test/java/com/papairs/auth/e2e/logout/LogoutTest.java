@@ -18,8 +18,7 @@ public class LogoutTest extends AbstractE2ETest {
 
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, bearerToken(token)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Logout successful"));
+                .andExpect(status().isNoContent());
 
         fixtures.verifyTokenIsInvalid(token);
     }
@@ -29,8 +28,7 @@ public class LogoutTest extends AbstractE2ETest {
     public void returnSuccessWithInvalidToken() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, bearerToken("invalid-token-12345")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Logout successful"));
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -78,7 +76,7 @@ public class LogoutTest extends AbstractE2ETest {
 
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, bearerToken(token1)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         fixtures.verifyTokenIsInvalid(token1);
 

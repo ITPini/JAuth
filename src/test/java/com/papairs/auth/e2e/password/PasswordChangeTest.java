@@ -29,8 +29,7 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .header(AUTH_HEADER, bearerToken(token))
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Password changed successfully"));
+                .andExpect(status().isNoContent());
 
         fixtures.verifyTokenIsInvalid(token);
 
@@ -273,7 +272,7 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .header(AUTH_HEADER, bearerToken(token1))
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         fixtures.verifyTokenIsInvalid(token1);
         fixtures.verifyTokenIsInvalid(token2);

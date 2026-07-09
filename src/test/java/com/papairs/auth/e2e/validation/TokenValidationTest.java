@@ -15,13 +15,15 @@ public class TokenValidationTest extends AbstractE2ETest {
     @Test
     @DisplayName("Should validate and return userId for valid token")
     public void validateValidToken() throws Exception {
-        String userId = fixtures.registerUser(TEST_EMAIL_1, VALID_PASSWORD);
+        String response = fixtures.registerUser(TEST_EMAIL_1, VALID_PASSWORD);
         String token = fixtures.loginUser(TEST_EMAIL_1, VALID_PASSWORD);
+
+        String id = objectMapper.readTree(response).get("id").asText();
 
         mockMvc.perform(post("/api/auth/validate")
                         .header(AUTH_HEADER, bearerToken(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId));
+                .andExpect(jsonPath("$.id").value(id));
     }
 
     @Test

@@ -38,7 +38,7 @@ public class TestFixtures {
     }
 
     /**
-     * Register a new user via API and return the user ID
+     * Register a new user via API
      */
     public String registerUser(String email, String password) throws Exception {
         String requestBody = """
@@ -48,15 +48,13 @@ public class TestFixtures {
             }
             """.formatted(email, password);
 
-        String response = mockMvc.perform(post("/api/auth/register")
+        return mockMvc.perform(post("/api/auth/register")
                         .contentType(contentTypeJson)
                         .content(requestBody))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-
-        return objectMapper.readTree(response).get("user").get("id").asText();
     }
 
     /**
@@ -137,7 +135,7 @@ public class TestFixtures {
         mockMvc.perform(post("/api/auth/validate")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").exists());
+                .andExpect(jsonPath("$.id").exists());
     }
 
     /**

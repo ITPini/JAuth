@@ -9,7 +9,6 @@ import com.papairs.auth.model.User;
 import com.papairs.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,48 +27,48 @@ public class AuthController {
      * @return {@link LoginResponse} with user details and token or error message
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+    @ResponseStatus(HttpStatus.OK)
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 
     /**
      * Logout user by invalidating session
      * Requires Authorization header: Bearer <token>
      * @param authHeader Authorization header containing Bearer token
-     * @return {@link MessageResponse} indicating success or failure
      */
     @PostMapping("/logout")
-    public ResponseEntity<MessageResponse> logout(@RequestHeader("Authorization") String authHeader) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@RequestHeader("Authorization") String authHeader) {
         String token = extractBearerToken(authHeader);
         authService.logout(token);
-        return ResponseEntity.ok(new MessageResponse("Logout successful"));
     }
 
     /**
      * Register a new user
      * @param request registration request
-     * @return AuthResponse with user details or error message
+     * @return {@link UserResponse} with user details or error message
      * Does not return a sessionToken
      */
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         User user = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new RegisterResponse("User registered successfully", UserResponse.from(user)));
+        return UserResponse.from(user);
     }
 
     /**
      * Validate session token and return user information
      * Requires Authorization header: Bearer <token>
      * @param authHeader session token from Authorization header
-     * @return {@link UserResponse} indicating if token is valid or not
+     * @return {@link ValidationResponse} indicating if token is valid or not
      */
     @PostMapping("/validate")
-    public ResponseEntity<ValidationResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+    @ResponseStatus(HttpStatus.OK)
+    public ValidationResponse validateToken(@RequestHeader("Authorization") String authHeader) {
         String token = extractBearerToken(authHeader);
         String userId = authService.validateTokenForUserId(token);
-        return ResponseEntity.ok(new ValidationResponse(userId));
+        return new ValidationResponse(userId);
     }
 
     /**
@@ -77,27 +76,25 @@ public class AuthController {
      * Requires Authorization header: Bearer <token>
      * @param authHeader session token from Authorization header
      * @param request change password request
-     * @return {@link MessageResponse} indicating success or failure
      */
     @PostMapping("/change-password")
-    public ResponseEntity<MessageResponse> changePassword(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
             @RequestHeader("Authorization") String authHeader,
-            @Valid @RequestBody ChangePasswordRequest request) {
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
         String token = extractBearerToken(authHeader);
         authService.changePassword(token, request);
-        return ResponseEntity.ok(new MessageResponse("Password changed successfully"));
     }
 
     /**
      * Delete user by userId (Internal use only)
      * @param userId user ID to delete
-     * @return {@link MessageResponse} with no content
      */
     @DeleteMapping("/{userId}")
-    public ResponseEntity<MessageResponse> deleteUser(@PathVariable String userId) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String userId) {
         authService.deleteUser(userId);
-
-        return ResponseEntity.noContent().build();
     }
 
     /**

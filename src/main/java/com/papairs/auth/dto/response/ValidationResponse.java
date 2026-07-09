@@ -1,3 +1,3 @@
 package com.papairs.auth.dto.response;
 
-public record ValidationResponse(String userId) {}
+public record ValidationResponse(String id) {}
