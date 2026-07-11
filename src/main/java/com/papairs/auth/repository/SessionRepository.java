@@ -61,4 +61,18 @@ public interface SessionRepository extends JpaRepository<Session, String> {
     @Transactional
     @Query("DELETE FROM Session s WHERE s.expiresAt < :currentTime")
     int deleteByExpiresAtBefore(LocalDateTime currentTime);
+
+    /**
+     * Refresh a session's last-active timestamp, but only if it is stale.
+     * The {@code lastActiveAt < :cutoff} guard pushes the "at most once per throttle
+     * window" decision into the database, so the hot validation path issues one small
+     * UPDATE that matches zero rows when the session was touched recently
+     * @param sessionId session ID
+     * @param now new last-active timestamp
+     * @param cutoff sessions last active before this are considered stale
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Session s SET s.lastActiveAt = :now WHERE s.id = :sessionId AND s.lastActiveAt < :cutoff")
+    void touchIfStale(String sessionId, LocalDateTime now, LocalDateTime cutoff);
 }
