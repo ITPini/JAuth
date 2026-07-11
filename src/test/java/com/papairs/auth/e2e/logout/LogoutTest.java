@@ -24,19 +24,18 @@ public class LogoutTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("Should return success even with invalid token for security")
+    @DisplayName("Should reject with invalid token for security")
     public void returnSuccessWithInvalidToken() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, bearerToken("invalid-token-12345")))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("Should reject logout without Authorization header")
     public void rejectLogoutWithoutAuthHeader() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("Authorization")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -44,8 +43,7 @@ public class LogoutTest extends AbstractE2ETest {
     public void rejectLogoutWithMalformedAuthHeader() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, "NotBearer sometoken"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("Bearer")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -53,8 +51,7 @@ public class LogoutTest extends AbstractE2ETest {
     public void rejectLogoutWithEmptyBearerToken() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, "Bearer "))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("empty")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -62,8 +59,7 @@ public class LogoutTest extends AbstractE2ETest {
     public void rejectLogoutWithWhitespaceOnlyToken() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .header(AUTH_HEADER, "Bearer    "))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("empty")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

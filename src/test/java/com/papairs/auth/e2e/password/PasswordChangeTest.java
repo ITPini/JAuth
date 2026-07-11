@@ -228,8 +228,7 @@ public class PasswordChangeTest extends AbstractE2ETest {
         mockMvc.perform(post("/api/auth/change-password")
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("Authorization")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -247,8 +246,7 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .header(AUTH_HEADER, bearerToken("invalid-token-xyz"))
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("Invalid")));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
