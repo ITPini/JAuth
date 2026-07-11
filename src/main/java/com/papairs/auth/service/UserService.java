@@ -56,6 +56,17 @@ public class UserService {
     }
 
     /**
+     *
+     * @param sessionId session ID
+     * @param now new last-active timestamp
+     * @return Optional<String> if found, else empty
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> findValidUserId(String sessionId, LocalDateTime now) {
+        return userRepository.findValidUserId(sessionId, now);
+    }
+
+    /**
      * Check if email exists
      * @param email email address
      * @return true if exists, else false

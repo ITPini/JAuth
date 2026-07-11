@@ -124,27 +124,34 @@ public class AuthService {
      * Validate session token and return userId only
      * OPTIMIZED for high-frequency validation endpoint
      * Does NOT load full User entity for performance
-     * @param token session token
+     * TODO: Implement email verification
+     * @param sessionId session ID
      * @return userId if valid, else throw exception
      */
     @Transactional
-    public String validateTokenForUserId(String token) {
-        Session session = sessionService.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid session token"));
+    public ValidationResponse validateTokenBySession(String sessionId) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<String> userId = userService.findValidUserId(sessionId, now);
+
+        if (userId.isPresent()) {
+            sessionService.touchLastActive(sessionId, now);
+            return new ValidationResponse(userId.get());
+        }
+
+        Session session = sessionService.findById(sessionId)
+                .orElseThrow(() -> new AuthenticationException("Invalid token"));
 
         if (sessionService.isExpired(session)) {
-            sessionService.delete(session);
             throw new InvalidTokenException("Session expired");
         }
 
-        if (!userService.existsAndIsActive(session.getUserId())) {
-            sessionService.delete(session);
-            throw new UserDeactivatedException("User account is deactivated");
-        }
+        throw new UserDeactivatedException("User account is deactivated");
+    }
 
-        sessionService.updateLastActive(session);
-
-        return session.getUserId();
+    public Session findSessionByToken(String token) {
+        return sessionService.findByToken(token)
+                .orElseThrow(() -> new AuthenticationException("Invalid session ID"));
     }
 
     /**

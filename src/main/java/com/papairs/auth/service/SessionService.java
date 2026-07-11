@@ -69,16 +69,21 @@ public class SessionService {
     }
 
     /**
+     * Find a session by its ID
+     * @param sessionId session ID
+     * @return Optional<Session> if found, else empty
+     */
+    public Optional<Session> findById(String sessionId) {
+        return sessionRepository.findById(sessionId);
+    }
+
+    /**
      * Update the last active timestamp of a session
-     * @param session Session entity
+     * @param sessionId session ID
      */
     @Transactional
-    public void updateLastActive(Session session) {
-        // Only update if > 5 minutes old
-        if (session.getLastActiveAt().isBefore(LocalDateTime.now().minusMinutes(5))) {
-            session.setLastActiveAt(LocalDateTime.now());
-            sessionRepository.save(session);
-        }
+    public void touchLastActive(String sessionId, LocalDateTime now) {
+        sessionRepository.touchIfStale(sessionId, now, now.minusMinutes(5));
     }
 
     /**
