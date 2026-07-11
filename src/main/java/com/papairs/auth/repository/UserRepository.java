@@ -89,4 +89,20 @@ public interface UserRepository extends JpaRepository<User, String> {
      * @return true if exists, false otherwise
      */
     boolean existsByIdAndIsActiveTrue(String userId);
+
+    /**
+     * Finds the user ID associated with a valid session.
+     * @param sessionId session ID
+     * @param now the current timestamp used to check session expiry
+     * @return an {@link Optional} containing the user ID if the session is valid, or empty otherwise
+     */
+    @Query("""
+    SELECT s.userId
+    FROM Session s
+    JOIN User u ON u.id = s.userId
+    WHERE s.id = :sessionId
+      AND s.expiresAt > :now
+      AND u.isActive = true
+    """)
+    Optional<String> findValidUserId(String sessionId, LocalDateTime now);
 }
