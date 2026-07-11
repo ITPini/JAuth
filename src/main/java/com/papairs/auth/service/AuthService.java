@@ -6,6 +6,7 @@ import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.LoginResponse;
 import com.papairs.auth.dto.response.SessionCreationResult;
 import com.papairs.auth.dto.response.UserResponse;
+import com.papairs.auth.dto.response.ValidationResponse;
 import com.papairs.auth.exception.AuthenticationException;
 import com.papairs.auth.exception.InvalidTokenException;
 import com.papairs.auth.exception.UserAlreadyExistsException;
@@ -14,6 +15,9 @@ import com.papairs.auth.model.Session;
 import com.papairs.auth.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -79,45 +83,11 @@ public class AuthService {
 
     /**
      * Logout user by deleting session
-     * @param token unhashed session token
+     * @param sessionId session ID
      * Does not throw error if session not found for security reasons
      */
-    @Transactional
-    public void logout(String token) {
-        sessionService.deleteByToken(token);
-    }
-
-    /**
-     * Validate session and return user information <p>
-     * Firstly, check if session exists <p>
-     * Check if session is expired, if so delete it <p>
-     * Check if user exists <p>
-     * Check if user is active, if not delete session <p>
-     * Lastly, update session last active timestamp <p>
-     * @param token session token
-     * @return User entity if valid, else throw exception
-     */
-    @Transactional
-    public User validateTokenForUser(String token) {
-        Session session = sessionService.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid session token"));
-
-        if (sessionService.isExpired(session)) {
-            sessionService.delete(session);
-            throw new InvalidTokenException("Session expired");
-        }
-
-        User user = userService.findById(session.getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found for session"));
-
-        if (!userService.isActive(user)) {
-            sessionService.delete(session);
-            throw new UserDeactivatedException("User account is deactivated");
-        }
-
-        sessionService.updateLastActive(session);
-
-        return user;
+    public void logoutBySessionId(String sessionId) {
+        sessionService.deleteById(sessionId);
     }
 
     /**
@@ -157,12 +127,12 @@ public class AuthService {
     /**
      * Change user password
      * TODO: Write custom annotation to validate newPassword and confirmPassword match to accumulate all validation errors in ChangePasswordRequest
-     * @param token session token
+     * @param userId user ID
      * @param request change password request
      */
     @Transactional
-    public void changePassword(String token, ChangePasswordRequest request) {
-        User user = validateTokenForUser(token);
+    public void changePasswordByUserId(String userId, ChangePasswordRequest request) {
+        User user = userService.findById(userId).orElseThrow(() -> new AuthenticationException("User not found"));
 
         if (!request.isNewPasswordDifferent()) {
             throw new AuthenticationException("New password must be different from old password");

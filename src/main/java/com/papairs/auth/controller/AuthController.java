@@ -4,11 +4,12 @@ import com.papairs.auth.dto.request.ChangePasswordRequest;
 import com.papairs.auth.dto.request.LoginRequest;
 import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.*;
-import com.papairs.auth.exception.InvalidAuthHeaderException;
 import com.papairs.auth.model.User;
+import com.papairs.auth.security.SessionPrincipal;
 import com.papairs.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,13 +36,12 @@ public class AuthController {
     /**
      * Logout user by invalidating session
      * Requires Authorization header: Bearer <token>
-     * @param authHeader Authorization header containing Bearer token
+     * @param principal
      */
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@RequestHeader("Authorization") String authHeader) {
-        String token = extractBearerToken(authHeader);
-        authService.logout(token);
+    public void logout(@AuthenticationPrincipal SessionPrincipal principal) {
+        authService.logoutBySessionId(principal.sessionId());
     }
 
     /**
@@ -60,31 +60,28 @@ public class AuthController {
     /**
      * Validate session token and return user information
      * Requires Authorization header: Bearer <token>
-     * @param authHeader session token from Authorization header
+     * @param principal
      * @return {@link ValidationResponse} indicating if token is valid or not
      */
     @PostMapping("/validate")
     @ResponseStatus(HttpStatus.OK)
-    public ValidationResponse validateToken(@RequestHeader("Authorization") String authHeader) {
-        String token = extractBearerToken(authHeader);
-        String userId = authService.validateTokenForUserId(token);
-        return new ValidationResponse(userId);
+    public ValidationResponse validateToken(@AuthenticationPrincipal SessionPrincipal principal) {
+        return authService.validateTokenBySession(principal.sessionId());
     }
 
     /**
-     * Change user password
+     * Change password for authenticated user
      * Requires Authorization header: Bearer <token>
-     * @param authHeader session token from Authorization header
-     * @param request change password request
+     * @param principal
+     * @param request change password request containing old and new password
      */
     @PostMapping("/change-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal SessionPrincipal principal,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        String token = extractBearerToken(authHeader);
-        authService.changePassword(token, request);
+        authService.changePasswordByUserId(principal.userId(), request);
     }
 
     /**
@@ -95,28 +92,5 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable String userId) {
         authService.deleteUser(userId);
-    }
-
-    /**
-     * Extract Bearer token from Authorization header
-     * @param authHeader Authorization header value
-     * @return extracted token
-     */
-    private String extractBearerToken(String authHeader) {
-        if (authHeader == null || authHeader.isBlank()) {
-            throw new InvalidAuthHeaderException("Authorization header is missing");
-        }
-
-        if (!authHeader.startsWith("Bearer ")) {
-            throw new InvalidAuthHeaderException("Authorization header must start with 'Bearer '");
-        }
-
-        String token = authHeader.substring(7).trim();
-
-        if (token.isBlank()) {
-            throw new InvalidAuthHeaderException("Token is empty");
-        }
-
-        return token;
     }
 }

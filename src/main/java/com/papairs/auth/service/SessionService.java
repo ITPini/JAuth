@@ -96,21 +96,12 @@ public class SessionService {
     }
 
     /**
-     * Delete a session by unhashed token (logout)
-     * @param token unhashed session token
+     * Delete a specific session by ID
+     * @param sessionId session ID
      */
     @Transactional
-    public void deleteByToken(String token) {
-        sessionRepository.deleteByTokenHash(tokenHasher.hash(token));
-    }
-
-    /**
-     * Delete a specific session entity
-     * @param session Session entity
-     */
-    @Transactional
-    public void delete(Session session) {
-        sessionRepository.delete(session);
+    public void deleteById(String sessionId) {
+        sessionRepository.deleteById(sessionId);
     }
 
     /**
@@ -120,14 +111,6 @@ public class SessionService {
     @Transactional
     public void deleteAllUserSessions(String userId) {
         sessionRepository.deleteByUserId(userId);
-    }
-
-    /**
-     * Delete all expired sessions (clean-up)
-     */
-    @Transactional
-    public int deleteExpiredSessions() {
-        return sessionRepository.deleteByExpiresAtBefore(LocalDateTime.now());
     }
 
     /**
