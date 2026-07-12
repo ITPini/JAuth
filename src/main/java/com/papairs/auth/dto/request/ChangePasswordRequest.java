@@ -1,9 +1,11 @@
 package com.papairs.auth.dto.request;
 
+import com.papairs.auth.validation.PasswordMatches;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@PasswordMatches
 public record ChangePasswordRequest (
     @NotBlank(message = "Old Password is required")
     String oldPassword,
