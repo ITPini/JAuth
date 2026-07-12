@@ -1,18 +1,13 @@
 package com.papairs.auth.service;
 
-import com.papairs.auth.dto.request.ChangePasswordRequest;
-import com.papairs.auth.dto.request.LoginRequest;
-import com.papairs.auth.dto.request.RegisterRequest;
-import com.papairs.auth.dto.response.LoginResponse;
-import com.papairs.auth.dto.response.SessionCreationResult;
-import com.papairs.auth.dto.response.UserResponse;
-import com.papairs.auth.dto.response.ValidationResponse;
 import com.papairs.auth.exception.AuthenticationException;
 import com.papairs.auth.exception.InvalidTokenException;
 import com.papairs.auth.exception.UserAlreadyExistsException;
 import com.papairs.auth.exception.UserDeactivatedException;
 import com.papairs.auth.model.Session;
 import com.papairs.auth.model.User;
+import com.papairs.auth.service.result.LoginResult;
+import com.papairs.auth.service.result.SessionCreationResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,16 +27,17 @@ public class AuthService {
 
     /**
      * Register a new user
-     * @param request registration request
+     * @param email email
+     * @param password unhashed password
      * @return User entity if successful, else throw exception
      */
     @Transactional
-    public User register(RegisterRequest request) {
-        if (userService.emailExists(request.email())) {
+    public User register(String email, String password) {
+        if (userService.emailExists(email)) {
             throw new UserAlreadyExistsException("Email already registered");
         }
 
-        return userService.createUser(request.email(), request.password())
+        return userService.createUser(email, password)
                 .orElseThrow(() -> new AuthenticationException("Failed to create user"));
     }
 
@@ -54,31 +50,27 @@ public class AuthService {
      * Update last login timestamp
      * Create session and return token
      *
-     * @param request login request
+     * @param email email
+     * @param password unhashed password
      * @return LoginResponse with session token and user details, else throw exception
      */
     @Transactional
-    public LoginResponse login(LoginRequest request) {
-        User user = userService.findByEmail(request.email())
+    public LoginResult login(String email, String password) {
+        User user = userService.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
         if (!userService.isActive(user)) {
             throw new UserDeactivatedException("Account is deactivated");
         }
 
-        if (!userService.verifyPassword(request.password(), user.getPasswordHash())) {
+        if (!userService.verifyPassword(password, user.getPasswordHash())) {
             throw new AuthenticationException("Invalid credentials");
         }
 
         SessionCreationResult sessionResult = sessionService.createSession(user.getId());
         userService.updateLastLogin(user.getId());
 
-        return new LoginResponse(
-                sessionResult.token(),
-                sessionResult.sessionId(),
-                sessionResult.expiresAt(),
-                UserResponse.from(user)
-        );
+        return new LoginResult(sessionResult, user);
     }
 
     /**
@@ -99,14 +91,14 @@ public class AuthService {
      * @return userId if valid, else throw exception
      */
     @Transactional
-    public ValidationResponse validateTokenBySession(String sessionId) {
+    public String validateTokenBySession(String sessionId) {
         LocalDateTime now = LocalDateTime.now();
 
         Optional<String> userId = userService.findValidUserId(sessionId, now);
 
         if (userId.isPresent()) {
             sessionService.touchLastActive(sessionId, now);
-            return new ValidationResponse(userId.get());
+            return userId.get();
         }
 
         Session session = sessionService.findById(sessionId)
@@ -125,28 +117,21 @@ public class AuthService {
     }
 
     /**
-     * Change user password
-     * TODO: Write custom annotation to validate newPassword and confirmPassword match to accumulate all validation errors in ChangePasswordRequest
+     * Change user password and deletes all previous sessions
      * @param userId user ID
-     * @param request change password request
+     * @param oldPassword old unhashed password
+     * @param newPassword new unhashed password
      */
     @Transactional
-    public void changePasswordByUserId(String userId, ChangePasswordRequest request) {
-        User user = userService.findById(userId).orElseThrow(() -> new AuthenticationException("User not found"));
+    public void changePasswordByUserId(String userId, String oldPassword, String newPassword) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
 
-        if (!request.isNewPasswordDifferent()) {
-            throw new AuthenticationException("New password must be different from old password");
-        }
-
-        if (!request.isNewPasswordConfirmed()) {
-            throw new AuthenticationException("New password and confirmation password do not match");
-        }
-
-        if (!userService.verifyPassword(request.oldPassword(), user.getPasswordHash())) {
+        if (!userService.verifyPassword(oldPassword, user.getPasswordHash())) {
             throw new AuthenticationException("Old password is incorrect");
         }
 
-        userService.changePassword(user.getId(), request.newPassword());
+        userService.changePassword(user.getId(), newPassword);
 
         sessionService.deleteAllUserSessions(user.getId());
     }

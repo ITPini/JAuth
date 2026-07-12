@@ -7,6 +7,7 @@ import com.papairs.auth.dto.response.*;
 import com.papairs.auth.model.User;
 import com.papairs.auth.security.SessionPrincipal;
 import com.papairs.auth.service.AuthService;
+import com.papairs.auth.service.result.LoginResult;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,7 +31,13 @@ public class AuthController {
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+        LoginResult result = authService.login(request.email(), request.password());
+        return new LoginResponse(
+                result.session().token(),
+                result.session().sessionId(),
+                result.session().expiresAt(),
+                UserResponse.from(result.user())
+        );
     }
 
     /**
@@ -53,7 +60,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
-        User user = authService.register(request);
+        User user = authService.register(request.email(), request.password());
         return UserResponse.from(user);
     }
 
@@ -66,7 +73,8 @@ public class AuthController {
     @PostMapping("/validate")
     @ResponseStatus(HttpStatus.OK)
     public ValidationResponse validateToken(@AuthenticationPrincipal SessionPrincipal principal) {
-        return authService.validateTokenBySession(principal.sessionId());
+        String userId = authService.validateTokenBySession(principal.sessionId());
+        return new ValidationResponse(userId);
     }
 
     /**
@@ -81,7 +89,7 @@ public class AuthController {
             @AuthenticationPrincipal SessionPrincipal principal,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        authService.changePasswordByUserId(principal.userId(), request);
+        authService.changePasswordByUserId(principal.userId(), request.oldPassword(), request.newPassword());
     }
 
     /**

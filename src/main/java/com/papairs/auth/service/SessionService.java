@@ -1,9 +1,9 @@
 package com.papairs.auth.service;
 
-import com.papairs.auth.dto.response.SessionCreationResult;
 import com.papairs.auth.model.Session;
 import com.papairs.auth.repository.SessionRepository;
 import com.papairs.auth.security.TokenHasher;
+import com.papairs.auth.service.result.SessionCreationResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
