@@ -49,7 +49,7 @@ public class RegistrationTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value(containsString("already registered")));
+                .andExpect(jsonPath("$.detail").value(containsString("already registered")));
     }
 
     @Test

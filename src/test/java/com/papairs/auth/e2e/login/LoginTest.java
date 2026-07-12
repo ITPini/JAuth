@@ -48,7 +48,7 @@ public class LoginTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("Invalid credentials")));
+                .andExpect(jsonPath("$.detail").value("Invalid credentials"));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class LoginTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("Invalid credentials")));
+                .andExpect(jsonPath("$.detail").value(containsString("Invalid credentials")));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class LoginTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(containsString("deactivated")));
+                .andExpect(jsonPath("$.detail").value("Account is deactivated"));
     }
 
     @Test
@@ -189,8 +189,8 @@ public class LoginTest extends AbstractE2ETest {
                 .getResponse()
                 .getContentAsString();
 
-        String wrongPasswordMessage = objectMapper.readTree(wrongPasswordResponse).get("message").asText();
-        String nonExistentMessage = objectMapper.readTree(nonExistentEmailResponse).get("message").asText();
+        String wrongPasswordMessage = objectMapper.readTree(wrongPasswordResponse).get("detail").asText();
+        String nonExistentMessage = objectMapper.readTree(nonExistentEmailResponse).get("detail").asText();
 
         assert wrongPasswordMessage.equals(nonExistentMessage) : 
             "Error messages should be identical for security reasons";

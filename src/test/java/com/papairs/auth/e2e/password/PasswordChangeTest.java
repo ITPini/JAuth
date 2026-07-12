@@ -55,7 +55,7 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("incorrect")));
+                .andExpect(jsonPath("$.detail").value(containsString("Old password is incorrect")));
     }
 
     @Test
@@ -76,8 +76,8 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .header(AUTH_HEADER, bearerToken(token))
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("different")));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details", hasItem(containsString("different"))));
     }
 
     @Test
@@ -98,8 +98,8 @@ public class PasswordChangeTest extends AbstractE2ETest {
                         .header(AUTH_HEADER, bearerToken(token))
                         .contentType(CONTENT_TYPE_JSON)
                         .content(requestBody))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("match")));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details", hasItem(containsString("do not match"))));
     }
 
     @Test

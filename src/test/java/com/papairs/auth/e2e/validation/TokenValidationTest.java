@@ -43,7 +43,7 @@ public class TokenValidationTest extends AbstractE2ETest {
         mockMvc.perform(post("/api/auth/validate")
                         .header(AUTH_HEADER, bearerToken(expiredToken)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value(containsString("expired")));
+                .andExpect(jsonPath("$.detail").value(containsString("Session expired")));
     }
 
     @Test
@@ -80,6 +80,6 @@ public class TokenValidationTest extends AbstractE2ETest {
         mockMvc.perform(post("/api/auth/validate")
                         .header(AUTH_HEADER, bearerToken(token)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(containsString("deactivated")));
+                .andExpect(jsonPath("$.detail").value(containsString("User account is deactivated")));
     }
 }
