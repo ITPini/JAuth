@@ -23,7 +23,7 @@ public class TokenValidationTest extends AbstractE2ETest {
         mockMvc.perform(post("/api/auth/validate")
                         .header(AUTH_HEADER, bearerToken(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id));
+                .andExpect(jsonPath("$.userId").value(id));
     }
 
     @Test

@@ -135,7 +135,7 @@ public class TestFixtures {
         mockMvc.perform(post("/api/auth/validate")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.userId").exists());
     }
 
     /**
